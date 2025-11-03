@@ -4,10 +4,22 @@ import type { Test } from '../types';
 // Use environment variable for API URL, fallback to Render backend for production
 // In production (Vercel), VITE_API_URL should be set to the Render backend URL
 // For local dev, use '/api' which will proxy or use http://localhost:8000
-const API_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.PROD 
-    ? 'https://chemtrac-app.onrender.com/api' 
-    : '/api');
+function getApiUrl(): string {
+  // If explicitly set, use it
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  
+  // If running in browser and not localhost, assume production
+  if (typeof window !== 'undefined' && !window.location.hostname.includes('localhost')) {
+    return 'https://chemtrac-app.onrender.com/api';
+  }
+  
+  // Local development fallback
+  return '/api';
+}
+
+const API_URL = getApiUrl();
 
 console.log('API Base URL:', API_URL);
 console.log('Environment:', import.meta.env.MODE);
