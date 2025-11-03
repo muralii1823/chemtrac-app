@@ -5,6 +5,8 @@ builder.Services.AddControllersWithViews();
 
 // No database needed - using hardcoded data for demo
 
+var app = builder.Build();
+
 // Configure pipeline
 if (!app.Environment.IsDevelopment())
 {
