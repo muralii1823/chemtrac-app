@@ -10,6 +10,9 @@ function Tests() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [visible, setVisible] = useState(false);
+  const [selectedTest, setSelectedTest] = useState<Test | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editFormData, setEditFormData] = useState<Partial<Test>>({});
   const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -46,6 +49,37 @@ function Tests() {
     } catch (err) {
       console.error('Error deleting test:', err);
       alert('Failed to delete test');
+    }
+  };
+
+  const handleViewDetails = async (id: number) => {
+    try {
+      const test = await testApi.getById(id);
+      setSelectedTest(test);
+      setEditFormData(test);
+      setIsEditMode(false);
+    } catch (err) {
+      console.error('Error loading test details:', err);
+      alert('Failed to load test details');
+    }
+  };
+
+  const handleCloseDialog = () => {
+    setSelectedTest(null);
+    setIsEditMode(false);
+    setEditFormData({});
+  };
+
+  const handleSaveEdit = async () => {
+    if (!selectedTest?.id) return;
+    try {
+      await testApi.update(selectedTest.id, editFormData);
+      await loadTests();
+      handleCloseDialog();
+      alert('Test updated successfully!');
+    } catch (err) {
+      console.error('Error updating test:', err);
+      alert('Failed to update test');
     }
   };
 
@@ -185,7 +219,7 @@ function Tests() {
             <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
               <div>
                 <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-3 leading-tight">
-                  Test <span className="text-orange-500">Management</span>
+                  Lab Test <span className="text-orange-500">Management</span>
                 </h1>
                 <p className="text-base text-gray-600 max-w-2xl">
                   Manage and monitor all your laboratory tests in one place
@@ -402,15 +436,15 @@ function Tests() {
                     </div>
 
                     <div className="flex items-center justify-between">
-                      <Link
-                        to={`/tests/${test.id}`}
+                      <button
+                        onClick={() => handleViewDetails(test.id!)}
                         className="text-sm font-semibold text-orange-500 hover:text-orange-600 transition-colors flex items-center gap-1 group/link"
                       >
                         View Details
                         <svg className="w-4 h-4 transform group-hover/link:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>
-                      </Link>
+                      </button>
                       <button
                         onClick={() => handleDelete(test.id!)}
                         className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200 group/delete"
@@ -428,6 +462,262 @@ function Tests() {
           )}
         </div>
       </section>
+
+      {/* Details Dialog Modal */}
+      {selectedTest && (
+        <div className="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+            onClick={handleCloseDialog}
+          ></div>
+
+          {/* Modal */}
+          <div className="flex min-h-full items-center justify-center p-4">
+            <div className="relative bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              {/* Header */}
+              <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  {isEditMode ? 'Edit Test' : 'Test Details'}
+                </h2>
+                <button
+                  onClick={handleCloseDialog}
+                  className="text-gray-400 hover:text-gray-500 transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="px-6 py-4">
+                {isEditMode ? (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                      <input
+                        type="text"
+                        value={editFormData.name || ''}
+                        onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                      <textarea
+                        value={editFormData.description || ''}
+                        onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
+                        rows={4}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                        <select
+                          value={editFormData.status || ''}
+                          onChange={(e) => setEditFormData({ ...editFormData, status: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        >
+                          <option value="Draft">Draft</option>
+                          <option value="Active">Active</option>
+                          <option value="Completed">Completed</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                        <select
+                          value={editFormData.priority || ''}
+                          onChange={(e) => setEditFormData({ ...editFormData, priority: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        >
+                          <option value="">None</option>
+                          <option value="Low">Low</option>
+                          <option value="Medium">Medium</option>
+                          <option value="High">High</option>
+                          <option value="Critical">Critical</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                        <input
+                          type="text"
+                          value={editFormData.category || ''}
+                          onChange={(e) => setEditFormData({ ...editFormData, category: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Version</label>
+                        <input
+                          type="text"
+                          value={editFormData.version || ''}
+                          onChange={(e) => setEditFormData({ ...editFormData, version: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Test Type</label>
+                      <input
+                        type="text"
+                        value={editFormData.testType || ''}
+                        onChange={(e) => setEditFormData({ ...editFormData, testType: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Assigned To</label>
+                      <input
+                        type="text"
+                        value={editFormData.assignedTo || ''}
+                        onChange={(e) => setEditFormData({ ...editFormData, assignedTo: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      />
+                    </div>
+                    {editFormData.dueDate && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+                        <input
+                          type="date"
+                          value={editFormData.dueDate ? new Date(editFormData.dueDate).toISOString().split('T')[0] : ''}
+                          onChange={(e) => setEditFormData({ ...editFormData, dueDate: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        />
+                      </div>
+                    )}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                      <textarea
+                        value={editFormData.notes || ''}
+                        onChange={(e) => setEditFormData({ ...editFormData, notes: e.target.value })}
+                        rows={3}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900 mb-2">{selectedTest.name}</h3>
+                    </div>
+                    <div className="flex gap-2">
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold uppercase ${
+                        selectedTest.status?.toLowerCase() === 'active'
+                          ? 'bg-green-100 text-green-700'
+                          : selectedTest.status?.toLowerCase() === 'completed'
+                          ? 'bg-blue-100 text-blue-700'
+                          : 'bg-gray-100 text-gray-700'
+                      }`}>
+                        {selectedTest.status}
+                      </span>
+                      {selectedTest.priority && (
+                        <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                          selectedTest.priority.toLowerCase() === 'critical'
+                            ? 'bg-red-100 text-red-700'
+                            : selectedTest.priority.toLowerCase() === 'high'
+                            ? 'bg-orange-100 text-orange-700'
+                            : selectedTest.priority.toLowerCase() === 'medium'
+                            ? 'bg-yellow-100 text-yellow-700'
+                            : 'bg-gray-100 text-gray-700'
+                        }`}>
+                          {selectedTest.priority}
+                        </span>
+                      )}
+                    </div>
+                    {selectedTest.category && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">Category</label>
+                        <p className="text-gray-900">{selectedTest.category}</p>
+                      </div>
+                    )}
+                    {selectedTest.description && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">Description</label>
+                        <p className="text-gray-900">{selectedTest.description}</p>
+                      </div>
+                    )}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">Version</label>
+                        <p className="text-gray-900">v{selectedTest.version}</p>
+                      </div>
+                      {selectedTest.testType && (
+                        <div>
+                          <label className="text-sm font-medium text-gray-700">Test Type</label>
+                          <p className="text-gray-900">{selectedTest.testType}</p>
+                        </div>
+                      )}
+                    </div>
+                    {selectedTest.assignedTo && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">Assigned To</label>
+                        <p className="text-gray-900">{selectedTest.assignedTo}</p>
+                      </div>
+                    )}
+                    {selectedTest.dueDate && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">Due Date</label>
+                        <p className="text-gray-900">{new Date(selectedTest.dueDate).toLocaleDateString()}</p>
+                      </div>
+                    )}
+                    {selectedTest.notes && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">Notes</label>
+                        <p className="text-gray-900 whitespace-pre-wrap">{selectedTest.notes}</p>
+                      </div>
+                    )}
+                    {selectedTest.createdAt && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">Created</label>
+                        <p className="text-gray-900">{new Date(selectedTest.createdAt).toLocaleString()}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Footer */}
+              <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex items-center justify-end gap-3">
+                {isEditMode ? (
+                  <>
+                    <button
+                      onClick={() => setIsEditMode(false)}
+                      className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleSaveEdit}
+                      className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors"
+                    >
+                      Save Changes
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={handleCloseDialog}
+                      className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                    >
+                      Close
+                    </button>
+                    <button
+                      onClick={() => setIsEditMode(true)}
+                      className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors"
+                    >
+                      Edit
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <footer className="bg-gray-900 text-gray-300 py-16 mt-24">
