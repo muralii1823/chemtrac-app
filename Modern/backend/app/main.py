@@ -170,12 +170,14 @@ def test_db():
         }
 
 # Custom 404 handler with CORS headers
-@app.exception_handler(404)
-async def not_found_handler(request: Request, exc):
-    """Handle 404 errors with CORS headers"""
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    """Handle HTTP exceptions (including 404) with CORS headers"""
     return JSONResponse(
-        status_code=404,
-        content={"detail": "Not Found"},
+        status_code=exc.status_code,
+        content={"detail": exc.detail if hasattr(exc, 'detail') else "Not Found"},
         headers={
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Methods": "*",
