@@ -1,9 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import './Home.css';
 
 function Home() {
-  const [visible, setVisible] = useState(false);
   const heroRef = useRef<HTMLDivElement>(null);
   const categoriesRef = useRef<HTMLDivElement>(null);
   const dealsRef = useRef<HTMLDivElement>(null);
@@ -33,7 +32,6 @@ function Home() {
     });
 
     setTimeout(() => {
-      setVisible(true);
       document.querySelector('.home-page')?.classList.add('is-loaded');
     }, 100);
 
