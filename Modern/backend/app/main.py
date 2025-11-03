@@ -15,16 +15,26 @@ app = FastAPI(
 )
 
 # Add CORS middleware IMMEDIATELY after app creation, BEFORE anything else
-# This ensures it's the first middleware and handles ALL requests including OPTIONS preflight
-# The middleware will automatically handle OPTIONS preflight requests sent by browsers
+# CRITICAL: Use allow_origins with explicit list instead of regex for better compatibility
+# FastAPI's CORSMiddleware handles this more reliably than regex patterns
+allowed_cors_origins = [
+    "https://chemtrac-9pv6tha2u-muralis-projects-6e29d5d0.vercel.app",
+    "https://chemtrac-app.vercel.app",  # Production Vercel URL if different
+    "http://localhost:3000",
+    "http://localhost:5173",  # Vite default port
+]
+
+# Also allow any Vercel preview URL by checking environment or using regex fallback
+# But prefer explicit list for main deployment
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=r"https://.*\.vercel\.app|https://.*\.onrender\.com|http://localhost.*",  # Match Vercel previews, production, and localhost
-    allow_credentials=False,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"],  # Must include OPTIONS for preflight
-    allow_headers=["*"],  # Allow all headers (includes Content-Type: application/json)
+    allow_origins=allowed_cors_origins,
+    allow_origin_regex=r"https://.*\.vercel\.app",  # Fallback for any Vercel preview
+    allow_credentials=False,  # Must be False with wildcard/regex
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"],
+    allow_headers=["Content-Type", "Authorization", "Accept", "Origin", "X-Requested-With"],
     expose_headers=["*"],
-    max_age=3600,  # Cache preflight responses for 1 hour
+    max_age=3600,
 )
 
 print(">>> CORS middleware added immediately after app creation", file=sys.stderr, flush=True)
