@@ -20,12 +20,16 @@ function Tests() {
   const loadTests = async () => {
     try {
       setLoading(true);
-      const data = await testApi.getAll();
-      setTests(data);
       setError(null);
-    } catch (err) {
-      setError('Failed to load tests. Please make sure the backend is running.');
+      console.log('Loading tests...');
+      const data = await testApi.getAll();
+      console.log('Tests loaded:', data.length);
+      setTests(data);
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.detail || err.message || 'Failed to load tests';
+      const fullError = `Failed to load tests: ${errorMessage}. Please check that the backend is running and CORS is configured correctly.`;
       console.error('Error loading tests:', err);
+      setError(fullError);
     } finally {
       setLoading(false);
     }

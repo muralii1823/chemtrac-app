@@ -1,20 +1,31 @@
 import axios from 'axios';
 import type { Test } from '../types';
 
-// Use environment variable for API URL, fallback to /api for local development
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+// Use environment variable for API URL, fallback to Render backend for production
+// In production (Vercel), VITE_API_URL should be set to the Render backend URL
+// For local dev, use '/api' which will proxy or use http://localhost:8000
+const API_URL = import.meta.env.VITE_API_URL || 
+  (import.meta.env.PROD 
+    ? 'https://chemtrac-app.onrender.com/api' 
+    : '/api');
+
+console.log('API Base URL:', API_URL);
+console.log('Environment:', import.meta.env.MODE);
+console.log('VITE_API_URL:', import.meta.env.VITE_API_URL);
 
 const api = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 30000, // 30 second timeout
 });
 
 // Add request interceptor for debugging
 api.interceptors.request.use(
   (config) => {
-    console.log('API Request:', config.method?.toUpperCase(), config.url);
+    const fullUrl = `${config.baseURL}${config.url}`;
+    console.log('API Request:', config.method?.toUpperCase(), fullUrl);
     return config;
   },
   (error) => {
@@ -26,11 +37,26 @@ api.interceptors.request.use(
 // Add response interceptor for debugging
 api.interceptors.response.use(
   (response) => {
-    console.log('API Response:', response.status, response.data);
+    console.log('API Response:', response.status, response.config.url);
     return response;
   },
   (error) => {
-    console.error('API Response Error:', error.response?.status, error.response?.data || error.message);
+    const message = error.response?.data?.detail || error.message;
+    const status = error.response?.status;
+    const url = error.config?.url;
+    
+    console.error('API Response Error:', {
+      status,
+      message,
+      url: error.config ? `${error.config.baseURL}${url}` : 'unknown',
+      error: error.message,
+    });
+    
+    // Provide more helpful error messages
+    if (!error.response) {
+      console.error('Network error - backend might be unreachable. Check:', API_URL);
+    }
+    
     return Promise.reject(error);
   }
 );

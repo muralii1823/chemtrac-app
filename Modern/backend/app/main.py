@@ -5,6 +5,7 @@ from fastapi.exceptions import RequestValidationError
 from .routes import tests
 import traceback
 import os
+import sys
 
 app = FastAPI(
     title="Chemical Testing API",
@@ -70,12 +71,20 @@ async def startup_event():
 
 # CORS middleware
 # Get allowed origins from environment variable, default to localhost for development
-allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(",")
+allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000")
+allowed_origins = allowed_origins_env.split(",")
+
+# Clean up any whitespace
+allowed_origins = [origin.strip() for origin in allowed_origins if origin.strip()]
+
+# Log the configured origins
+print(f">>> CORS: Configured allowed origins: {allowed_origins}", file=sys.stderr)
+sys.stderr.flush()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins,  # React frontend(s)
-    allow_credentials=True,
+    allow_origins=["*"],  # Allow all origins for now - update with specific domains in production
+    allow_credentials=False,  # Must be False when allow_origins is ["*"]
     allow_methods=["*"],
     allow_headers=["*"],
 )
