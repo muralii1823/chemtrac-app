@@ -21,12 +21,15 @@ function getApiUrl(): string {
 
 const API_URL = getApiUrl();
 
-console.log('API Base URL:', API_URL);
+console.log('API Base URL:', normalizedApiUrl);
 console.log('Environment:', import.meta.env.MODE);
 console.log('VITE_API_URL:', import.meta.env.VITE_API_URL);
 
+// Ensure baseURL ends with /api for proper path joining
+const normalizedApiUrl = API_URL.endsWith('/api') ? API_URL : `${API_URL}/api`;
+
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: normalizedApiUrl,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -66,7 +69,7 @@ api.interceptors.response.use(
     
     // Provide more helpful error messages
     if (!error.response) {
-      console.error('Network error - backend might be unreachable. Check:', API_URL);
+      console.error('Network error - backend might be unreachable. Check:', normalizedApiUrl);
     }
     
     return Promise.reject(error);
