@@ -169,6 +169,20 @@ def test_db():
             "traceback": traceback.format_exc()
         }
 
+# Custom 404 handler with CORS headers
+@app.exception_handler(404)
+async def not_found_handler(request: Request, exc):
+    """Handle 404 errors with CORS headers"""
+    return JSONResponse(
+        status_code=404,
+        content={"detail": "Not Found"},
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "*",
+            "Access-Control-Allow-Headers": "*",
+        }
+    )
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=3001)
