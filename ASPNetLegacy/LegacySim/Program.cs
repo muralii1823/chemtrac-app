@@ -7,18 +7,40 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 
 // Database - Use persistent path for Azure App Service
-// Azure App Service uses HOME environment variable for persistent storage
+// Azure App Service: Windows uses HOME, Linux uses HOME
+// For Windows: HOME\site\wwwroot\data
+// For Linux: HOME\site\wwwroot\data
 var homePath = Environment.GetEnvironmentVariable("HOME");
-var dbPath = homePath != null
-    ? Path.Combine(homePath, "site", "wwwroot", "data", "app.db")
-    : "Data Source=app.db";
+string dbPath;
+string dbDir;
 
-// Ensure directory exists
 if (homePath != null)
 {
-    var dbDir = Path.Combine(homePath, "site", "wwwroot", "data");
-    Directory.CreateDirectory(dbDir);
+    // Azure App Service - use persistent storage
+    dbDir = Path.Combine(homePath, "site", "wwwroot", "data");
+    dbPath = Path.Combine(dbDir, "app.db");
+    
+    // Ensure directory exists
+    try
+    {
+        Directory.CreateDirectory(dbDir);
+        Console.WriteLine($"Database directory: {dbDir}");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Failed to create directory {dbDir}: {ex.Message}");
+        // Fallback to current directory
+        dbPath = "Data Source=app.db";
+    }
 }
+else
+{
+    // Local development
+    dbPath = "Data Source=app.db";
+    dbDir = Directory.GetCurrentDirectory();
+}
+
+Console.WriteLine($"Database path: {dbPath}");
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite($"Data Source={dbPath}"));
