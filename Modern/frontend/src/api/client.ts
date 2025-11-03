@@ -98,8 +98,9 @@ api.interceptors.response.use(
 
 export const testApi = {
   getAll: async (): Promise<Test[]> => {
-    // ALWAYS use /api/tests endpoint - this is the ONLY endpoint that works reliably
-    const response = await api.get<Test[]>('/api/tests');
+    // baseURL already includes /api, so just use /tests
+    // Result: https://chemtrac-app.onrender.com/api/tests
+    const response = await api.get<Test[]>('/tests');
     return response.data;
   },
 
