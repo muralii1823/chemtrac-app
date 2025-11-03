@@ -88,31 +88,43 @@ from starlette.responses import Response
 
 class CORSMiddlewareCustom(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
+        import sys
+        
         # Handle preflight OPTIONS requests
         if request.method == "OPTIONS":
             response = JSONResponse(content={}, status_code=200)
-        else:
-            response = await call_next(request)
+            response.headers["Access-Control-Allow-Origin"] = "*"
+            response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, HEAD, PATCH"
+            response.headers["Access-Control-Allow-Headers"] = "*"
+            response.headers["Access-Control-Allow-Credentials"] = "false"
+            print(f">>> CORS: OPTIONS preflight handled for {request.url.path}", file=sys.stderr, flush=True)
+            return response
         
-        # FORCE add CORS headers using direct assignment
-        # Use origin from request if available, otherwise use wildcard
+        # For all other requests, get response and add headers
+        response = await call_next(request)
+        
+        # CRITICAL: Use response.headers.update() or direct assignment
+        # and ensure headers persist even if response is modified
         origin = request.headers.get("origin", "*")
+        
+        # Force set headers - overwrite any existing values
         response.headers["Access-Control-Allow-Origin"] = "*"
         response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, HEAD, PATCH"
         response.headers["Access-Control-Allow-Headers"] = "*"
         response.headers["Access-Control-Allow-Credentials"] = "false"
         response.headers["Access-Control-Expose-Headers"] = "*"
         
-        import sys
-        print(f">>> CORS: Headers added to {request.method} {request.url.path}", file=sys.stderr, flush=True)
-        print(f">>> CORS: Access-Control-Allow-Origin = {response.headers.get('Access-Control-Allow-Origin', 'NOT SET')}", file=sys.stderr, flush=True)
+        # Verify headers are set
+        allow_origin = response.headers.get("Access-Control-Allow-Origin", "NOT FOUND")
+        print(f">>> CORS: {request.method} {request.url.path} - Origin: {origin}", file=sys.stderr, flush=True)
+        print(f">>> CORS: Access-Control-Allow-Origin = {allow_origin}", file=sys.stderr, flush=True)
         
         return response
 
-# Add custom CORS middleware - must be added after FastAPI app creation
+# Add custom CORS middleware FIRST - must be added before routes to run on all requests
 app.add_middleware(CORSMiddlewareCustom)
 
-# Also add routes directly at /tests for backward compatibility FIRST
+# Also add routes directly at /tests for backward compatibility
 # This ensures /tests routes are registered before /api routes
 # Import the route functions directly
 from .routes.tests import get_all_tests, get_test, create_test, update_test, delete_test
