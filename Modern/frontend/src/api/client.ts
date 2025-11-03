@@ -12,26 +12,23 @@ function getApiUrl(): string {
   
   // If running in browser and not localhost, assume production (Vercel)
   if (typeof window !== 'undefined' && !window.location.hostname.includes('localhost')) {
-    return 'https://chemtrac-app.onrender.com/api';
+    // Use the base URL without /api - we'll add it in the routes
+    return 'https://chemtrac-app.onrender.com';
   }
   
   // Local development fallback
-  return '/api';
+  return '';
 }
 
 const API_URL = getApiUrl();
 
-// Normalize API URL - remove trailing slash and ensure we have the base URL
-// If API_URL already includes /api, use it; otherwise don't add /api here
-// We'll handle path joining in the routes
+// Normalize API URL - ensure it's a clean base URL
 let normalizedApiUrl: string;
-if (API_URL.endsWith('/api')) {
-  normalizedApiUrl = API_URL;
-} else if (API_URL.endsWith('/api/')) {
-  normalizedApiUrl = API_URL.slice(0, -1); // Remove trailing slash
+if (API_URL) {
+  normalizedApiUrl = API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL;
 } else {
-  // For local dev, API_URL is '/api', keep it
-  normalizedApiUrl = API_URL;
+  // Empty string for local dev - will use relative paths
+  normalizedApiUrl = '';
 }
 
 console.log('API Base URL:', normalizedApiUrl);
@@ -101,11 +98,8 @@ api.interceptors.response.use(
 
 export const testApi = {
   getAll: async (): Promise<Test[]> => {
-    // Use /tests path - axios will join with baseURL
-    // baseURL: https://chemtrac-app.onrender.com/api
-    // path: /tests
-    // Result: https://chemtrac-app.onrender.com/api/tests
-    const response = await api.get<Test[]>('/tests');
+    // ALWAYS use /api/tests endpoint - this is the ONLY endpoint that works reliably
+    const response = await api.get<Test[]>('/api/tests');
     return response.data;
   },
 
