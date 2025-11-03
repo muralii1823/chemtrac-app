@@ -82,18 +82,19 @@ allowed_origins = [origin.strip() for origin in allowed_origins if origin.strip(
 print(f">>> CORS: Configured allowed origins: {allowed_origins}", file=sys.stderr)
 sys.stderr.flush()
 
-# Use FastAPI's built-in CORSMiddleware - it's more reliable
-# Configure it to allow ALL origins with wildcard
+# Use FastAPI's built-in CORSMiddleware with regex to allow all origins
+# CORSMiddleware doesn't accept ["*"], so we use a regex pattern
+import re
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins
-    allow_credentials=False,  # Must be False when using wildcard
-    allow_methods=["*"],  # Allow all methods
-    allow_headers=["*"],  # Allow all headers
-    expose_headers=["*"],  # Expose all headers
+    allow_origin_regex=r".*",  # Regex pattern to match all origins
+    allow_credentials=False,  # Must be False when using wildcard/regex
+    allow_methods=["*"],  # Allow all HTTP methods
+    allow_headers=["*"],  # Allow all request headers
+    expose_headers=["*"],  # Expose all response headers
 )
 
-print(">>> CORS middleware configured: allow_origins=['*'], allow_credentials=False", file=sys.stderr, flush=True)
+print(">>> CORS middleware configured: allow_origin_regex='.*', allow_credentials=False", file=sys.stderr, flush=True)
 
 # Also add routes directly at /tests for backward compatibility
 # This ensures /tests routes are registered before /api routes
