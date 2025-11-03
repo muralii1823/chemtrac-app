@@ -9,7 +9,7 @@ from ..models import Test, TestCreate, TestUpdate
 router = APIRouter(prefix="/tests", tags=["tests"])
 
 @router.get("")
-def get_all_tests(db: Session = Depends(get_db), response: Response = None):
+def get_all_tests(response: Response, db: Session = Depends(get_db)):
     """Get all chemical tests"""
     # Ensure tables exist before querying
     ensure_tables_exist()
@@ -58,9 +58,12 @@ def get_all_tests(db: Session = Depends(get_db), response: Response = None):
             raise
         
         print(">>> About to return result...", file=sys.stderr, flush=True)
-        # Ensure CORS headers are set
-        if response:
-            response.headers["Access-Control-Allow-Origin"] = "*"
+        # CRITICAL: Set CORS headers directly on response object
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+        response.headers["Access-Control-Allow-Headers"] = "*"
+        response.headers["Access-Control-Expose-Headers"] = "*"
+        print(f">>> CORS headers set: Access-Control-Allow-Origin = {response.headers.get('Access-Control-Allow-Origin', 'NOT SET')}", file=sys.stderr, flush=True)
         return result
     except Exception as e:
         import traceback
@@ -89,13 +92,17 @@ def get_test(test_id: int, db: Session = Depends(get_db)):
     return test
 
 @router.post("", response_model=Test, status_code=201)
-def create_test(test: TestCreate, db: Session = Depends(get_db)):
+def create_test(test: TestCreate, response: Response, db: Session = Depends(get_db)):
     """Create a new chemical test"""
     ensure_tables_exist()
     db_test = TestDB(**test.model_dump())
     db.add(db_test)
     db.commit()
     db.refresh(db_test)
+    # Set CORS headers
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "*"
     return db_test
 
 @router.put("/{test_id}", response_model=Test)
