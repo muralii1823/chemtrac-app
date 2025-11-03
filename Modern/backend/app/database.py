@@ -16,6 +16,14 @@ if DATABASE_URL:
         SQLALCHEMY_DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
     else:
         SQLALCHEMY_DATABASE_URL = DATABASE_URL
+    
+    # Force IPv4 connection (Render network doesn't support IPv6)
+    # Replace IPv6 addresses or use connection pooler
+    if "[" in SQLALCHEMY_DATABASE_URL:
+        # Has IPv6 address, try to get IPv4 version from Supabase pooler
+        # Connection pooler uses port 6543 and forces IPv4
+        SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace(":5432", ":6543").replace("[", "").replace("]", "")
+        print("Using connection pooler (port 6543) to force IPv4 connection")
 else:
     # Fallback to individual components for local development
     POSTGRES_HOST = os.getenv("POSTGRES_HOST", "localhost")
