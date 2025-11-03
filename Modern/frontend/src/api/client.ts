@@ -21,12 +21,12 @@ function getApiUrl(): string {
 
 const API_URL = getApiUrl();
 
+// Ensure baseURL ends with /api for proper path joining
+const normalizedApiUrl = API_URL.endsWith('/api') ? API_URL : `${API_URL}/api`;
+
 console.log('API Base URL:', normalizedApiUrl);
 console.log('Environment:', import.meta.env.MODE);
 console.log('VITE_API_URL:', import.meta.env.VITE_API_URL);
-
-// Ensure baseURL ends with /api for proper path joining
-const normalizedApiUrl = API_URL.endsWith('/api') ? API_URL : `${API_URL}/api`;
 
 const api = axios.create({
   baseURL: normalizedApiUrl,
