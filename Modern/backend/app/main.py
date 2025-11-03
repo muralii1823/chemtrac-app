@@ -90,11 +90,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include routers
-# The router has prefix="/tests", so including with "/api" gives us "/api/tests"
-app.include_router(tests.router, prefix="/api")
-
-# Also add routes directly at /tests for backward compatibility
+# Also add routes directly at /tests for backward compatibility FIRST
+# This ensures /tests routes are registered before /api routes
 # Import the route functions directly
 from .routes.tests import get_all_tests, get_test, create_test, update_test, delete_test
 from .database import get_db
@@ -102,7 +99,9 @@ from .models import TestCreate, TestUpdate
 
 @app.get("/tests")
 def get_all_tests_wrapper(db: Session = Depends(get_db)):
-    """Wrapper for /tests endpoint"""
+    """Wrapper for /tests endpoint - backward compatibility"""
+    import sys
+    print(">>> /tests endpoint called (wrapper)", file=sys.stderr, flush=True)
     return get_all_tests(db)
 
 @app.get("/tests/{test_id}")
@@ -124,6 +123,10 @@ def update_test_wrapper(test_id: int, test: TestUpdate, db: Session = Depends(ge
 def delete_test_wrapper(test_id: int, db: Session = Depends(get_db)):
     """Wrapper for /tests/{id} DELETE endpoint"""
     return delete_test(test_id, db)
+
+# Include routers
+# The router has prefix="/tests", so including with "/api" gives us "/api/tests"
+app.include_router(tests.router, prefix="/api")
 
 @app.get("/api/health")
 def health_check():
