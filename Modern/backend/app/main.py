@@ -12,22 +12,28 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Startup event - test database connection
+# Startup event - test database connection (non-blocking)
 @app.on_event("startup")
 async def startup_event():
     import sys
+    import asyncio
     print(">>> FastAPI startup...", file=sys.stderr)
     sys.stderr.flush()
-    try:
-        from app.database import engine
-        from sqlalchemy import text
-        with engine.connect() as conn:
-            conn.execute(text("SELECT 1"))
-        print(">>> Database connection OK", file=sys.stderr)
-        sys.stderr.flush()
-    except Exception as e:
-        print(f">>> Database warning: {e}", file=sys.stderr)
-        sys.stderr.flush()
+    # Run database test in background to avoid blocking startup
+    async def test_db():
+        try:
+            from app.database import engine
+            from sqlalchemy import text
+            with engine.connect() as conn:
+                conn.execute(text("SELECT 1"))
+            print(">>> Database connection OK", file=sys.stderr)
+            sys.stderr.flush()
+        except Exception as e:
+            print(f">>> Database warning: {e}", file=sys.stderr)
+            sys.stderr.flush()
+    
+    # Don't await - let it run in background, don't block startup
+    asyncio.create_task(test_db())
 
 # Global exception handler - temporarily disabled to debug
 # @app.exception_handler(Exception)

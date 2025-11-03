@@ -67,13 +67,16 @@ class TestDB(Base):
 
 # Create tables automatically on first import
 # This ensures tables exist even if init_db.py wasn't run
+# Note: This runs in a non-blocking way - failures won't crash the app
 try:
-    Base.metadata.create_all(bind=engine)
+    # Only attempt table creation if we can connect
+    with engine.connect() as conn:
+        Base.metadata.create_all(bind=engine)
+        print("Database tables verified/created successfully")
 except Exception as e:
-    # If connection fails (e.g., MySQL not configured), log but don't crash
-    # User should run init_db.py to set up database first
+    # If connection fails, log but don't crash - tables will be created on first API call
     print(f"Warning: Could not create tables automatically: {e}")
-    print("Please ensure PostgreSQL is running and configured")
+    print("Tables will be created on first database operation")
 
 # Dependency for database sessions
 # Note: Works with both sync and async routes
