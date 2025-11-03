@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
 from typing import List
@@ -9,7 +9,7 @@ from ..models import Test, TestCreate, TestUpdate
 router = APIRouter(prefix="/tests", tags=["tests"])
 
 @router.get("")
-def get_all_tests(db: Session = Depends(get_db)):
+def get_all_tests(db: Session = Depends(get_db), response: Response = None):
     """Get all chemical tests"""
     # Ensure tables exist before querying
     ensure_tables_exist()
@@ -58,6 +58,9 @@ def get_all_tests(db: Session = Depends(get_db)):
             raise
         
         print(">>> About to return result...", file=sys.stderr, flush=True)
+        # Ensure CORS headers are set
+        if response:
+            response.headers["Access-Control-Allow-Origin"] = "*"
         return result
     except Exception as e:
         import traceback
