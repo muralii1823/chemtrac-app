@@ -82,27 +82,30 @@ allowed_origins = [origin.strip() for origin in allowed_origins if origin.strip(
 print(f">>> CORS: Configured allowed origins: {allowed_origins}", file=sys.stderr)
 sys.stderr.flush()
 
-# CORS middleware - use custom middleware instead of CORSMiddleware for reliability
-# This ensures CORS headers are ALWAYS sent
+# CORS middleware - use custom middleware that FORCES headers on all responses
 @app.middleware("http")
 async def cors_middleware(request: Request, call_next):
-    """Custom CORS middleware that always adds headers"""
+    """Custom CORS middleware that ALWAYS adds headers - runs for ALL requests"""
+    import sys
+    
     # Handle preflight OPTIONS requests
     if request.method == "OPTIONS":
         response = JSONResponse(content={}, status_code=200)
     else:
         response = await call_next(request)
     
-    # ALWAYS add CORS headers to every response
-    origin = request.headers.get("origin", "*")
-    response.headers["Access-Control-Allow-Origin"] = "*"
-    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, HEAD, PATCH"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, Accept, Origin, X-Requested-With"
-    response.headers["Access-Control-Allow-Credentials"] = "false"
-    response.headers["Access-Control-Expose-Headers"] = "*"
+    # CRITICAL: Use response.headers.set() to force header addition
+    # Don't check if exists - just set it unconditionally
+    response.headers.set("Access-Control-Allow-Origin", "*")
+    response.headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, HEAD, PATCH")
+    response.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept, Origin, X-Requested-With, *")
+    response.headers.set("Access-Control-Allow-Credentials", "false")
+    response.headers.set("Access-Control-Expose-Headers", "*")
     
-    import sys
-    print(f">>> CORS: Added headers to {request.method} {request.url.path}", file=sys.stderr, flush=True)
+    # Log for debugging
+    print(f">>> CORS: Set headers on {request.method} {request.url.path} - Origin: {request.headers.get('origin', 'none')}", file=sys.stderr, flush=True)
+    print(f">>> CORS: Headers set: {dict(response.headers)}", file=sys.stderr, flush=True)
+    
     return response
 
 # Also add routes directly at /tests for backward compatibility FIRST

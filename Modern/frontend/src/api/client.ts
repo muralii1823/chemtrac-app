@@ -12,8 +12,8 @@ function getApiUrl(): string {
   
   // If running in browser and not localhost, assume production (Vercel)
   if (typeof window !== 'undefined' && !window.location.hostname.includes('localhost')) {
-    // Use the base URL without /api - we'll add it in the routes
-    return 'https://chemtrac-app.onrender.com';
+    // Use the full base URL with /api included
+    return 'https://chemtrac-app.onrender.com/api';
   }
   
   // Local development fallback
