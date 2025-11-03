@@ -15,14 +15,16 @@ app = FastAPI(
 )
 
 # Add CORS middleware IMMEDIATELY after app creation, BEFORE anything else
-# This ensures it's the first middleware and handles ALL requests
+# This ensures it's the first middleware and handles ALL requests including OPTIONS preflight
+# The middleware will automatically handle OPTIONS preflight requests sent by browsers
 app.add_middleware(
     CORSMiddleware,
     allow_origin_regex=r"https://.*\.vercel\.app|https://.*\.onrender\.com|http://localhost.*",  # Match Vercel previews, production, and localhost
     allow_credentials=False,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"],  # Must include OPTIONS for preflight
+    allow_headers=["*"],  # Allow all headers (includes Content-Type: application/json)
     expose_headers=["*"],
+    max_age=3600,  # Cache preflight responses for 1 hour
 )
 
 print(">>> CORS middleware added immediately after app creation", file=sys.stderr, flush=True)
