@@ -1,25 +1,60 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using LegacySim.Data;
 using LegacySim.Models;
 
 namespace LegacySim.Controllers;
 
 public class TestsController : Controller
 {
-    private readonly ApplicationDbContext _context;
-
-    public TestsController(ApplicationDbContext context)
+    // Hardcoded test data for demo
+    private static List<Test> GetHardcodedTests()
     {
-        _context = context;
+        return new List<Test>
+        {
+            new Test
+            {
+                Id = 1,
+                Name = "Sulphuric acid",
+                Description = "Chemical analysis test for H2SO4 concentration",
+                Version = "1.0",
+                Status = "Active",
+                CreatedAt = DateTime.UtcNow.AddDays(-5)
+            },
+            new Test
+            {
+                Id = 2,
+                Name = "chem 1",
+                Description = "Research & Development test for new compound",
+                Version = "1.0",
+                Status = "Draft",
+                CreatedAt = DateTime.UtcNow.AddDays(-3)
+            },
+            new Test
+            {
+                Id = 3,
+                Name = "Hydrochloric Acid Test",
+                Description = "Standard purity test for HCl",
+                Version = "2.1",
+                Status = "Completed",
+                CreatedAt = DateTime.UtcNow.AddDays(-10)
+            },
+            new Test
+            {
+                Id = 4,
+                Name = "Sodium Hydroxide Analysis",
+                Description = "Concentration and pH level testing",
+                Version = "1.5",
+                Status = "Active",
+                CreatedAt = DateTime.UtcNow.AddDays(-7)
+            }
+        };
     }
 
     // GET: Tests
-    public async Task<IActionResult> Index()
+    public IActionResult Index()
     {
-        var tests = await _context.Tests
+        var tests = GetHardcodedTests()
             .OrderByDescending(t => t.CreatedAt)
-            .ToListAsync();
+            .ToList();
         return View(tests);
     }
 
@@ -29,16 +64,15 @@ public class TestsController : Controller
         return View();
     }
 
-    // POST: Tests/Create
+    // POST: Tests/Create (just redirects - no saving)
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([Bind("Name,Description,Version,Status")] Test test)
+    public IActionResult Create([Bind("Name,Description,Version,Status")] Test test)
     {
         if (ModelState.IsValid)
         {
-            test.CreatedAt = DateTime.UtcNow;
-            _context.Add(test);
-            await _context.SaveChangesAsync();
+            // In a real app, this would save to database
+            // For demo, just redirect to show the form works
             return RedirectToAction(nameof(Index));
         }
         return View(test);
