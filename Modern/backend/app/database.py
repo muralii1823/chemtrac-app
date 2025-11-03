@@ -68,15 +68,22 @@ class TestDB(Base):
 # Create tables automatically on first import
 # This ensures tables exist even if init_db.py wasn't run
 # Note: This runs in a non-blocking way - failures won't crash the app
-try:
-    # Only attempt table creation if we can connect
-    with engine.connect() as conn:
-        Base.metadata.create_all(bind=engine)
-        print("Database tables verified/created successfully")
-except Exception as e:
-    # If connection fails, log but don't crash - tables will be created on first API call
-    print(f"Warning: Could not create tables automatically: {e}")
-    print("Tables will be created on first database operation")
+# Defer table creation to first API call to avoid connection issues during import
+_table_creation_attempted = False
+
+def ensure_tables_exist():
+    """Ensure database tables exist - called on first API request"""
+    global _table_creation_attempted
+    if _table_creation_attempted:
+        return
+    _table_creation_attempted = True
+    try:
+        with engine.connect() as conn:
+            Base.metadata.create_all(bind=engine)
+            print("Database tables verified/created successfully")
+    except Exception as e:
+        print(f"Warning: Could not create tables: {e}")
+        print("Tables will be retried on next operation")
 
 # Dependency for database sessions
 # Note: Works with both sync and async routes

@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import desc
 from typing import List
 
-from ..database import get_db, TestDB
+from ..database import get_db, TestDB, ensure_tables_exist
 from ..models import Test, TestCreate, TestUpdate
 
 router = APIRouter(prefix="/tests", tags=["tests"])
@@ -11,6 +11,8 @@ router = APIRouter(prefix="/tests", tags=["tests"])
 @router.get("")
 def get_all_tests(db: Session = Depends(get_db)):
     """Get all chemical tests"""
+    # Ensure tables exist before querying
+    ensure_tables_exist()
     import sys
     import json
     
@@ -86,6 +88,7 @@ def get_test(test_id: int, db: Session = Depends(get_db)):
 @router.post("", response_model=Test, status_code=201)
 def create_test(test: TestCreate, db: Session = Depends(get_db)):
     """Create a new chemical test"""
+    ensure_tables_exist()
     db_test = TestDB(**test.model_dump())
     db.add(db_test)
     db.commit()
