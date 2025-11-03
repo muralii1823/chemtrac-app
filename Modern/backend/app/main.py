@@ -1,7 +1,8 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
+from sqlalchemy.orm import Session
 from .routes import tests
 import traceback
 import os
@@ -90,10 +91,39 @@ app.add_middleware(
 )
 
 # Include routers
+# The router has prefix="/tests", so including with "/api" gives us "/api/tests"
 app.include_router(tests.router, prefix="/api")
 
-# Also include routes at /tests for backward compatibility (in case frontend uses old URLs)
-app.include_router(tests.router, prefix="/tests", tags=["tests-backward-compat"])
+# Also add routes directly at /tests for backward compatibility
+# Import the route functions directly
+from .routes.tests import get_all_tests, get_test, create_test, update_test, delete_test
+from .database import get_db
+from .models import TestCreate, TestUpdate
+
+@app.get("/tests")
+def get_all_tests_wrapper(db: Session = Depends(get_db)):
+    """Wrapper for /tests endpoint"""
+    return get_all_tests(db)
+
+@app.get("/tests/{test_id}")
+def get_test_wrapper(test_id: int, db: Session = Depends(get_db)):
+    """Wrapper for /tests/{id} endpoint"""
+    return get_test(test_id, db)
+
+@app.post("/tests")
+def create_test_wrapper(test: TestCreate, db: Session = Depends(get_db)):
+    """Wrapper for /tests POST endpoint"""
+    return create_test(test, db)
+
+@app.put("/tests/{test_id}")
+def update_test_wrapper(test_id: int, test: TestUpdate, db: Session = Depends(get_db)):
+    """Wrapper for /tests/{id} PUT endpoint"""
+    return update_test(test_id, test, db)
+
+@app.delete("/tests/{test_id}")
+def delete_test_wrapper(test_id: int, db: Session = Depends(get_db)):
+    """Wrapper for /tests/{id} DELETE endpoint"""
+    return delete_test(test_id, db)
 
 @app.get("/api/health")
 def health_check():
