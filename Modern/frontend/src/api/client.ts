@@ -49,8 +49,21 @@ const api = axios.create({
 // Add request interceptor for debugging
 api.interceptors.request.use(
   (config) => {
-    const fullUrl = `${config.baseURL}${config.url}`;
-    console.log('API Request:', config.method?.toUpperCase(), fullUrl);
+    // Ensure baseURL is set correctly
+    if (!config.baseURL) {
+      console.error('ERROR: baseURL is not set!', config);
+      config.baseURL = normalizedApiUrl;
+    }
+    // Construct full URL properly - axios handles this, but let's verify
+    const fullUrl = config.baseURL && config.url 
+      ? `${config.baseURL}${config.url.startsWith('/') ? '' : '/'}${config.url}`
+      : config.url || 'unknown';
+    console.log('API Request:', {
+      method: config.method?.toUpperCase(),
+      baseURL: config.baseURL,
+      url: config.url,
+      fullUrl: fullUrl
+    });
     return config;
   },
   (error) => {
