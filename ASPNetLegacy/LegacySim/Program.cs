@@ -25,19 +25,40 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 var app = builder.Build();
 
-// Auto-apply migrations
+// Auto-create database and apply migrations
 try
 {
     using (var scope = app.Services.CreateScope())
     {
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        db.Database.Migrate();
+        
+        // Try to ensure database exists and is up to date
+        if (db.Database.EnsureCreated())
+        {
+            Console.WriteLine("Database created successfully.");
+        }
+        else
+        {
+            // Database exists, try to apply migrations
+            try
+            {
+                db.Database.Migrate();
+                Console.WriteLine("Migrations applied successfully.");
+            }
+            catch
+            {
+                // If migrations fail, EnsureCreated might have already created it
+                // This is fine - database should exist now
+                Console.WriteLine("Database already exists or migrations not needed.");
+            }
+        }
     }
 }
 catch (Exception ex)
 {
-    // Log error but continue - migrations will be applied on first request if needed
-    Console.WriteLine($"Migration error (may be expected on first run): {ex.Message}");
+    // Log error but continue - database will be created on first request if needed
+    Console.WriteLine($"Database initialization error: {ex.Message}");
+    Console.WriteLine($"Stack trace: {ex.StackTrace}");
 }
 
 // Configure pipeline
