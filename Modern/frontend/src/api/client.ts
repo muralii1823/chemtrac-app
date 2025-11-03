@@ -10,7 +10,7 @@ function getApiUrl(): string {
     return import.meta.env.VITE_API_URL;
   }
   
-  // If running in browser and not localhost, assume production
+  // If running in browser and not localhost, assume production (Vercel)
   if (typeof window !== 'undefined' && !window.location.hostname.includes('localhost')) {
     return 'https://chemtrac-app.onrender.com/api';
   }
