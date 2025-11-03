@@ -1,0 +1,37 @@
+@model IEnumerable<LegacySim.Models.Test>
+@{
+    ViewData["Title"] = "Tests";
+}
+
+<h2>Tests</h2>
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Create New Test</a>
+</p>
+
+<table class="table table-striped table-bordered">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Version</th>
+            <th>Status</th>
+            <th>Created At</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Id</td>
+                <td>@item.Name</td>
+                <td>@item.Description</td>
+                <td>@item.Version</td>
+                <td>@item.Status</td>
+                <td>@item.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")</td>
+            </tr>
+        }
+    </tbody>
+</table>
+

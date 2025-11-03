@@ -1,0 +1,67 @@
+/* Products page styles */
+
+.products-page {
+  overflow-x: hidden;
+  position: relative;
+  background: white;
+}
+
+/* Hide scrollbar for gallery */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Snap scrolling for gallery */
+.snap-x {
+  scroll-snap-type: x mandatory;
+}
+
+.snap-center {
+  scroll-snap-align: center;
+}
+
+.snap-mandatory {
+  scroll-snap-type: x mandatory;
+}
+
+/* Image grayscale effect */
+.grayscale {
+  filter: grayscale(100%);
+  transition: filter 0.3s ease;
+}
+
+.grayscale:hover {
+  filter: grayscale(0%);
+}
+
+/* Line clamp utility */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Smooth scrollbar */
+.products-page ::-webkit-scrollbar {
+  width: 10px;
+}
+
+.products-page ::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.products-page ::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 5px;
+}
+
+.products-page ::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+

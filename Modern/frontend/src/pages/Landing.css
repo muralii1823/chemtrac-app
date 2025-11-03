@@ -1,0 +1,78 @@
+/* Clean, professional single-page design matching Dribbble reference */
+
+.landing-page {
+  overflow-x: hidden;
+  position: relative;
+  background: white;
+}
+
+/* Smooth scroll animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Hide scrollbar for gallery */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Performance optimizations */
+.landing-page [data-section] {
+  will-change: transform, opacity;
+}
+
+/* Image grayscale effect - matches reference */
+.grayscale {
+  filter: grayscale(100%);
+  transition: filter 0.3s ease;
+}
+
+/* Snap scrolling for gallery */
+.snap-x {
+  scroll-snap-type: x mandatory;
+}
+
+.snap-center {
+  scroll-snap-align: center;
+}
+
+.snap-mandatory {
+  scroll-snap-type: x mandatory;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .landing-page h1 {
+    font-size: 3rem !important;
+  }
+  
+  .landing-page h2 {
+    font-size: 2.5rem !important;
+  }
+}
+
+/* Gallery card hover effect */
+.landing-page [data-section="gallery"] img {
+  transition: transform 0.3s ease;
+}
+
+.landing-page [data-section="gallery"] .flex-shrink-0:hover img {
+  transform: scale(1.05);
+}
