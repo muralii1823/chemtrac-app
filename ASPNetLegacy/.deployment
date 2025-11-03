@@ -1,3 +1,5 @@
 [config]
 SCM_DO_BUILD_DURING_DEPLOYMENT=true
+PROJECT=LegacySim/LegacySim.csproj
+SCM_REPOSITORY_PATH=ASPNetLegacy/LegacySim
 
