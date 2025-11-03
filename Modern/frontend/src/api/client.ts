@@ -21,8 +21,18 @@ function getApiUrl(): string {
 
 const API_URL = getApiUrl();
 
-// Ensure baseURL ends with /api for proper path joining
-const normalizedApiUrl = API_URL.endsWith('/api') ? API_URL : `${API_URL}/api`;
+// Normalize API URL - remove trailing slash and ensure we have the base URL
+// If API_URL already includes /api, use it; otherwise don't add /api here
+// We'll handle path joining in the routes
+let normalizedApiUrl: string;
+if (API_URL.endsWith('/api')) {
+  normalizedApiUrl = API_URL;
+} else if (API_URL.endsWith('/api/')) {
+  normalizedApiUrl = API_URL.slice(0, -1); // Remove trailing slash
+} else {
+  // For local dev, API_URL is '/api', keep it
+  normalizedApiUrl = API_URL;
+}
 
 console.log('API Base URL:', normalizedApiUrl);
 console.log('Environment:', import.meta.env.MODE);
@@ -78,6 +88,10 @@ api.interceptors.response.use(
 
 export const testApi = {
   getAll: async (): Promise<Test[]> => {
+    // Use /tests path - axios will join with baseURL
+    // baseURL: https://chemtrac-app.onrender.com/api
+    // path: /tests
+    // Result: https://chemtrac-app.onrender.com/api/tests
     const response = await api.get<Test[]>('/tests');
     return response.data;
   },
