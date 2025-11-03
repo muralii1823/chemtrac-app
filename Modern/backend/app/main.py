@@ -82,16 +82,15 @@ allowed_origins = [origin.strip() for origin in allowed_origins if origin.strip(
 print(f">>> CORS: Configured allowed origins: {allowed_origins}", file=sys.stderr)
 sys.stderr.flush()
 
-# CORS middleware - explicitly allow all origins
-# Using allow_origin_regex for better control
-import re
+# CORS middleware - use explicit origins list for reliability
+# FastAPI CORS middleware with explicit wildcard handling
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=r".*",  # Allow all origins using regex
-    allow_credentials=False,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"],
-    allow_headers=["*"],
-    expose_headers=["*"],
+    allow_origins=["*"],  # Explicitly allow all origins
+    allow_credentials=False,  # Must be False when using wildcard
+    allow_methods=["*"],  # Allow all HTTP methods
+    allow_headers=["*"],  # Allow all headers
+    expose_headers=["*"],  # Expose all headers to client
 )
 
 # Also add routes directly at /tests for backward compatibility FIRST
