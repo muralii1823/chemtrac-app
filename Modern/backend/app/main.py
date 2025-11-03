@@ -98,12 +98,15 @@ app.add_middleware(
 async def add_cors_headers(request: Request, call_next):
     """Ensure CORS headers are always present on responses"""
     response = await call_next(request)
-    # Add CORS headers if not already present
-    if "access-control-allow-origin" not in response.headers:
+    # ALWAYS add CORS headers - check using lowercase keys
+    headers_lower = {k.lower(): v for k, v in response.headers.items()}
+    if "access-control-allow-origin" not in headers_lower:
         response.headers["Access-Control-Allow-Origin"] = "*"
-    if "access-control-allow-methods" not in response.headers:
+        import sys
+        print(">>> Added Access-Control-Allow-Origin header", file=sys.stderr, flush=True)
+    if "access-control-allow-methods" not in headers_lower:
         response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, HEAD"
-    if "access-control-allow-headers" not in response.headers:
+    if "access-control-allow-headers" not in headers_lower:
         response.headers["Access-Control-Allow-Headers"] = "*"
     return response
 
