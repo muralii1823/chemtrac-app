@@ -10,7 +10,7 @@ from ..models import Test, TestCreate, TestUpdate
 router = APIRouter(prefix="/tests", tags=["tests"])
 
 @router.get("")
-def get_all_tests(response: Response, db: Session = Depends(get_db)):
+def get_all_tests(db: Session = Depends(get_db)):
     """Get all chemical tests"""
     # Ensure tables exist before querying
     ensure_tables_exist()
