@@ -93,6 +93,20 @@ app.add_middleware(
     expose_headers=["*"],  # Expose all headers to client
 )
 
+# Additional middleware to ensure CORS headers are always set
+@app.middleware("http")
+async def add_cors_headers(request: Request, call_next):
+    """Ensure CORS headers are always present on responses"""
+    response = await call_next(request)
+    # Add CORS headers if not already present
+    if "access-control-allow-origin" not in response.headers:
+        response.headers["Access-Control-Allow-Origin"] = "*"
+    if "access-control-allow-methods" not in response.headers:
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, HEAD"
+    if "access-control-allow-headers" not in response.headers:
+        response.headers["Access-Control-Allow-Headers"] = "*"
+    return response
+
 # Also add routes directly at /tests for backward compatibility FIRST
 # This ensures /tests routes are registered before /api routes
 # Import the route functions directly
