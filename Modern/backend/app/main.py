@@ -91,23 +91,8 @@ allowed_origins = allowed_origins_env.split(",")
 # Clean up any whitespace
 allowed_origins = [origin.strip() for origin in allowed_origins if origin.strip()]
 
-# Log the configured origins
-print(f">>> CORS: Configured allowed origins: {allowed_origins}", file=sys.stderr)
-sys.stderr.flush()
-
-# CRITICAL: Add CORS middleware BEFORE any routes are registered
-# This ensures middleware runs on ALL requests
-import re
-app.add_middleware(
-    CORSMiddleware,
-    allow_origin_regex=r"https://.*\.vercel\.app|https://.*\.onrender\.com|http://localhost.*",  # Match Vercel, Render, and localhost
-    allow_credentials=False,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"],
-    allow_headers=["*"],
-    expose_headers=["*"],
-)
-
-print(">>> CORS middleware configured with regex pattern", file=sys.stderr, flush=True)
+# CORS middleware already configured above - remove duplicate config
+# The middleware was added immediately after app creation (line 19-28)
 
 # Also add routes directly at /tests for backward compatibility
 # This ensures /tests routes are registered before /api routes
