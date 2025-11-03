@@ -93,21 +93,18 @@ app.add_middleware(
     expose_headers=["*"],  # Expose all headers to client
 )
 
-# Additional middleware to ensure CORS headers are always set
+# Additional middleware to FORCE CORS headers on all responses
 @app.middleware("http")
 async def add_cors_headers(request: Request, call_next):
-    """Ensure CORS headers are always present on responses"""
+    """Force CORS headers on all responses"""
     response = await call_next(request)
-    # ALWAYS add CORS headers - check using lowercase keys
-    headers_lower = {k.lower(): v for k, v in response.headers.items()}
-    if "access-control-allow-origin" not in headers_lower:
-        response.headers["Access-Control-Allow-Origin"] = "*"
-        import sys
-        print(">>> Added Access-Control-Allow-Origin header", file=sys.stderr, flush=True)
-    if "access-control-allow-methods" not in headers_lower:
-        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, HEAD"
-    if "access-control-allow-headers" not in headers_lower:
-        response.headers["Access-Control-Allow-Headers"] = "*"
+    # ALWAYS set CORS headers unconditionally
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, HEAD, PATCH"
+    response.headers["Access-Control-Allow-Headers"] = "*"
+    response.headers["Access-Control-Expose-Headers"] = "*"
+    import sys
+    print(f">>> CORS headers added to {request.method} {request.url.path}", file=sys.stderr, flush=True)
     return response
 
 # Also add routes directly at /tests for backward compatibility FIRST
