@@ -92,17 +92,8 @@ app.add_middleware(
 # Include routers
 app.include_router(tests.router, prefix="/api")
 
-# Add redirect for old /tests endpoints (backward compatibility)
-from fastapi.responses import RedirectResponse
-@app.get("/tests")
-@app.get("/tests/{path:path}")
-def redirect_tests_to_api(path: str = ""):
-    """Redirect /tests requests to /api/tests for backward compatibility"""
-    import sys
-    print(f">>> Redirecting /tests/{path} to /api/tests/{path}", file=sys.stderr, flush=True)
-    if path:
-        return RedirectResponse(url=f"/api/tests/{path}", status_code=307)
-    return RedirectResponse(url="/api/tests", status_code=307)
+# Also include routes at /tests for backward compatibility (in case frontend uses old URLs)
+app.include_router(tests.router, prefix="/tests", tags=["tests-backward-compat"])
 
 @app.get("/api/health")
 def health_check():
