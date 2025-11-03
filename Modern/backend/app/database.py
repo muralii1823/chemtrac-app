@@ -18,8 +18,11 @@ if DATABASE_URL:
         SQLALCHEMY_DATABASE_URL = DATABASE_URL
     
     # Force IPv4 connection (Render network doesn't support IPv6)
-    # Replace IPv6 addresses or use connection pooler
-    if "[" in SQLALCHEMY_DATABASE_URL:
+    # Skip conversion if already using pooler (pooler already uses IPv4)
+    if "pooler.supabase.com" in SQLALCHEMY_DATABASE_URL:
+        # Already using pooler connection - use as-is
+        print("Using Supabase connection pooler (already IPv4 compatible)")
+    elif "[" in SQLALCHEMY_DATABASE_URL:
         # Has IPv6 address, try to get IPv4 version from Supabase pooler
         # Connection pooler uses port 6543 and forces IPv4
         SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace(":5432", ":6543").replace("[", "").replace("]", "")
